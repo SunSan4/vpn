@@ -1,0 +1,51 @@
+services:
+  tuic-server:
+    image: tuic:1.0.0
+    container_name: tuic-server
+    volumes:
+      - ./tuic-server:/etc/tuic:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    command: ["/usr/local/bin/tuic-server", "-c", "/etc/tuic/config.json"]
+    networks:
+      - vpn-net-static
+    ports:
+      - "443:443/tcp"
+      - "443:443/udp"
+    restart: unless-stopped
+
+  tuic-client:
+    image: tuic:1.0.0
+    container_name: tuic-client
+    volumes:
+      - ./tuic-client:/etc/tuic:ro
+    command: ["/usr/local/bin/tuic-client", "-c", "/etc/tuic/client.json"]
+    networks:
+      - vpn-net-static
+    ports:
+      - "127.0.0.1:1080:1080"
+    restart: unless-stopped
+
+  tun2socks:
+    image: tun2socks:custom
+    container_name: tun2socks
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    networks:
+      - vpn-net-static
+    command: >
+      sh -c "
+        ip tuntap del dev tun0 mode tun || true;
+        ip tuntap add dev tun0 mode tun || true;
+        ip addr flush dev tun0 || true;
+        ip addr add 10.0.0.1/24 dev tun0;
+        ip link set dev tun0 up;
+        /usr/local/bin/tun2socks -device tun0 -proxy socks5://tuic-client:1080;
+        tail -f /dev/null"
+    restart: unless-stopped
+
+networks:
+  vpn-net-static:
+    external: true
