@@ -1,0 +1,11 @@
+FROM alpine:3.19
+RUN apk add --no-cache ca-certificates curl && update-ca-certificates
+# tuic-server
+RUN curl -L -o /usr/local/bin/tuic-server \
+  https://github.com/tuic-protocol/tuic/releases/download/tuic-server-1.0.0/tuic-server-1.0.0-x86_64-unknown-linux-musl && \
+  chmod +x /usr/local/bin/tuic-server
+# tuic-client
+RUN curl -L -o /usr/local/bin/tuic-client \
+  https://github.com/tuic-protocol/tuic/releases/download/tuic-client-1.0.0/tuic-client-1.0.0-x86_64-unknown-linux-musl && \
+  chmod +x /usr/local/bin/tuic-client
+WORKDIR /etc/tuic
