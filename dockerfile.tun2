@@ -1,0 +1,4 @@
+FROM alpine:latest
+RUN apk add --no-cache iproute2 iptables bash curl
+COPY ./tun2socks /usr/local/bin/tun2socks
+RUN chmod +x /usr/local/bin/tun2socks
